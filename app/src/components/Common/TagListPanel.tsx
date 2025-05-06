@@ -56,9 +56,12 @@ const CustomIcon = observer(({ onSubmit }: { onSubmit: (icon: string) => void })
       placeholder='Enter custom icon like "ri:star-smile-line"'
       value={icon}
       onValueChange={setIcon}
-      description={<>
-        Blinko use <a className="text-blue-500" href="https://icon-sets.iconify.design/" target="_blank">Iconify</a> for custom icon
-      </>}
+      aria-label='Custom Icon Input' // Added aria-label for accessibility
+      description={
+        <>
+          Blinko use <a className="text-blue-500" href="https://icon-sets.iconify.design/" target="_blank">Iconify</a> for custom icon
+        </>
+      }
     />
     <div className="flex justify-end">
       <Button color="primary" onPress={() => { onSubmit(icon) }}>Submit</Button>

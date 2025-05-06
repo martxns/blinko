@@ -183,52 +183,76 @@ export class BlinkoStore implements Store {
         };
 
         this.saveOfflineNote(offlineNote);
-        showToast && RootStore.Get(ToastPlugin).success(i18n.t("create-successfully") + '-' + i18n.t("offline-status"));
+        showToast && RootStore.Get(ToastPlugin).success(`${i18n.t('create-successfully')} - ${i18n.t('offline-status')}`);
         return offlineNote;
       }
 
-      const res = await api.notes.upsert.mutate({
-        content,
-        type,
-        isArchived,
-        isRecycle,
-        id,
-        attachments,
-        isTop,
-        isShare,
-        references,
-        createdAt: inputCreatedAt ? new Date(inputCreatedAt) : undefined,
-        updatedAt: inputUpdatedAt ? new Date(inputUpdatedAt) : undefined,
-        metadata
-      });
-      eventBus.emit('editor:clear')
-      showToast && RootStore.Get(ToastPlugin).success(id ? i18n.t("update-successfully") : i18n.t("create-successfully"))
-      refresh && this.updateTicker++
-      return res
+      try {
+        const res = await api.notes.upsert.mutate({
+          content,
+          type,
+          isArchived,
+          isRecycle,
+          id,
+          attachments,
+          isTop,
+          isShare,
+          references,
+          createdAt: inputCreatedAt ? new Date(inputCreatedAt) : undefined,
+          updatedAt: inputUpdatedAt ? new Date(inputUpdatedAt) : undefined,
+          metadata
+        });
+        eventBus.emit('editor:clear')
+        showToast && RootStore.Get(ToastPlugin).success(`${id ? i18n.t('update-successfully') : i18n.t('create-successfully')}`);
+        refresh && this.updateTicker++
+        return res
+      } catch (error) {
+        console.error('Error:', error.message);
+        RootStore.Get(ToastPlugin).error(error.message);
+        throw error;
+      }
     }
   })
 
   shareNote = new PromiseState({
     function: async (params: { id: number, isCancel: boolean, password?: string, expireAt?: Date }) => {
-      const res = await api.notes.shareNote.mutate(params)
-      RootStore.Get(ToastPlugin).success(i18n.t("operation-success"))
-      this.updateTicker++
-      return res
+      try {
+        const res = await api.notes.shareNote.mutate(params)
+        RootStore.Get(ToastPlugin).success(`${i18n.t('operation-success')}`);
+        this.updateTicker++
+        return res
+      } catch (error) {
+        console.error('Error:', error.message);
+        RootStore.Get(ToastPlugin).error(error.message);
+        throw error;
+      }
     }
   })
 
   internalShareNote = new PromiseState({
     function: async (params: { id: number, accountIds: number[], isCancel: boolean }) => {
-      const res = await api.notes.internalShareNote.mutate(params)
-      RootStore.Get(ToastPlugin).success(i18n.t("operation-success"))
-      this.updateTicker++
-      return res
+      try {
+        const res = await api.notes.internalShareNote.mutate(params)
+        RootStore.Get(ToastPlugin).success(`${i18n.t('operation-success')}`);
+        this.updateTicker++
+        return res
+      } catch (error) {
+        console.error('Error:', error.message);
+        RootStore.Get(ToastPlugin).error(error.message);
+        throw error;
+      }
     }
   })
 
   getInternalSharedUsers = new PromiseState({
     function: async (id: number) => {
-      return await api.notes.getInternalSharedUsers.mutate({ id })
+      try {
+        return await api.notes.getInternalSharedUsers.mutate({ id })
+      } catch (error) {
+        console.error('Error:', error.message);
+        RootStore.Get(ToastPlugin).error(error.message);
+        throw error;
+      }
     }
   })
 
@@ -260,9 +284,15 @@ export class BlinkoStore implements Store {
       let notes: Note[] = [];
 
       if (this.isOnline) {
-        notes = await api.notes.list.mutate({ ...this.noteListFilterConfig, searchText: this.searchText, page, size });
-        if (this.offlineNotes.length > 0) {
-          await this.syncOfflineNotes();
+        try {
+          notes = await api.notes.list.mutate({ ...this.noteListFilterConfig, searchText: this.searchText, page, size });
+          if (this.offlineNotes.length > 0) {
+            await this.syncOfflineNotes();
+          }
+        } catch (error) {
+          console.error('Error:', error.message);
+          RootStore.Get(ToastPlugin).error(error.message);
+          throw error;
         }
       }
 
@@ -281,52 +311,94 @@ export class BlinkoStore implements Store {
 
   referenceSearchList = new PromisePageState({
     function: async ({ page, size, searchText }) => {
-      return await api.notes.list.mutate({
-        searchText
-      })
+      try {
+        return await api.notes.list.mutate({
+          searchText
+        })
+      } catch (error) {
+        console.error('Error:', error.message);
+        RootStore.Get(ToastPlugin).error(error.message);
+        throw error;
+      }
     }
   })
 
   userList = new PromiseState({
     function: async () => {
-      return await api.users.list.query()
+      try {
+        return await api.users.list.query()
+      } catch (error) {
+        console.error('Error:', error.message);
+        RootStore.Get(ToastPlugin).error(error.message);
+        throw error;
+      }
     }
   })
 
   noteDetail = new PromiseState({
     function: async ({ id }) => {
-      return await api.notes.detail.mutate({ id })
+      try {
+        return await api.notes.detail.mutate({ id })
+      } catch (error) {
+        console.error('Error:', error.message);
+        RootStore.Get(ToastPlugin).error(error.message);
+        throw error;
+      }
     }
   })
 
   dailyReviewNoteList = new PromiseState({
     function: async () => {
-      return await api.notes.dailyReviewNoteList.query()
+      try {
+        return await api.notes.dailyReviewNoteList.query()
+      } catch (error) {
+        console.error('Error:', error.message);
+        RootStore.Get(ToastPlugin).error(error.message);
+        throw error;
+      }
     }
   })
 
   randomReviewNoteList = new PromiseState({
     function: async ({ limit = 30 }) => {
-      return await api.notes.randomNoteList.query({ limit })
+      try {
+        return await api.notes.randomNoteList.query({ limit })
+      } catch (error) {
+        console.error('Error:', error.message);
+        RootStore.Get(ToastPlugin).error(error.message);
+        throw error;
+      }
     }
   })
 
   resourceList = new PromisePageState({
     function: async ({ page, size, searchText, folder }) => {
-      return await api.attachments.list.query({ page, size, searchText, folder })
+      try {
+        return await api.attachments.list.query({ page, size, searchText, folder })
+      } catch (error) {
+        console.error('Error:', error.message);
+        RootStore.Get(ToastPlugin).error(error.message);
+        throw error;
+      }
     }
   })
 
   tagList = new PromiseState({
     function: async () => {
-      const falttenTags = await api.tags.list.query(undefined, { context: { skipBatch: true } });
-      const listTags = helper.buildHashTagTreeFromDb(falttenTags)
-      console.log(falttenTags, 'listTags')
-      let pathTags: string[] = [];
-      listTags.forEach(node => {
-        pathTags = pathTags.concat(helper.generateTagPaths(node));
-      });
-      return { falttenTags, listTags, pathTags }
+      try {
+        const falttenTags = await api.tags.list.query(undefined, { context: { skipBatch: true } });
+        const listTags = helper.buildHashTagTreeFromDb(falttenTags)
+        console.log(falttenTags, 'listTags')
+        let pathTags: string[] = [];
+        listTags.forEach(node => {
+          pathTags = pathTags.concat(helper.generateTagPaths(node));
+        });
+        return { falttenTags, listTags, pathTags }
+      } catch (error) {
+        console.error('Error:', error.message);
+        RootStore.Get(ToastPlugin).error(error.message);
+        throw error;
+      }
     }
   })
 
@@ -337,8 +409,14 @@ export class BlinkoStore implements Store {
   config = new PromiseState({
     loadingLock: false,
     function: async () => {
-      const res = await api.config.list.query()
-      return res
+      try {
+        const res = await api.config.list.query()
+        return res
+      } catch (error) {
+        console.error('Error:', error.message);
+        RootStore.Get(ToastPlugin).error(error.message);
+        throw error;
+      }
     }
   })
 
@@ -350,6 +428,8 @@ export class BlinkoStore implements Store {
         }
         return []
       } catch (error) {
+        console.error('Error:', error.message);
+        RootStore.Get(ToastPlugin).error(error.message);
         return []
       }
     }
@@ -357,22 +437,34 @@ export class BlinkoStore implements Store {
 
   updateDBTask = new PromiseState({
     function: async (isStart) => {
-      if (isStart) {
-        await api.task.upsertTask.mutate({ type: 'start', task: DBBAK_TASK_NAME })
-      } else {
-        await api.task.upsertTask.mutate({ type: 'stop', task: DBBAK_TASK_NAME })
+      try {
+        if (isStart) {
+          await api.task.upsertTask.mutate({ type: 'start', task: DBBAK_TASK_NAME })
+        } else {
+          await api.task.upsertTask.mutate({ type: 'stop', task: DBBAK_TASK_NAME })
+        }
+        await this.task.call()
+      } catch (error) {
+        console.error('Error:', error.message);
+        RootStore.Get(ToastPlugin).error(error.message);
+        throw error;
       }
-      await this.task.call()
     }
   })
   updateArchiveTask = new PromiseState({
     function: async (isStart) => {
-      if (isStart) {
-        await api.task.upsertTask.mutate({ type: 'start', task: ARCHIVE_BLINKO_TASK_NAME })
-      } else {
-        await api.task.upsertTask.mutate({ type: 'stop', task: ARCHIVE_BLINKO_TASK_NAME })
+      try {
+        if (isStart) {
+          await api.task.upsertTask.mutate({ type: 'start', task: ARCHIVE_BLINKO_TASK_NAME })
+        } else {
+          await api.task.upsertTask.mutate({ type: 'stop', task: ARCHIVE_BLINKO_TASK_NAME })
+        }
+        await this.task.call()
+      } catch (error) {
+        console.error('Error:', error.message);
+        RootStore.Get(ToastPlugin).error(error.message);
+        throw error;
       }
-      await this.task.call()
     }
   })
 

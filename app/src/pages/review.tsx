@@ -152,45 +152,66 @@ const App = observer(() => {
             {
               !store.isRandomReviewMode &&
               <Tooltip content={t('reviewed')}>
-                <Button onPress={async e => {
-                  if (!store.currentNote) return
-                  PromiseCall(api.notes.reviewNote.mutate({ id: store.currentNote!.id! }))
-                }} isIconOnly color='primary' startContent={<Icon icon="ci:check-all" width="24" height="24" />} />
+                <Button 
+                  onPress={async e => {
+                    if (!store.currentNote) return
+                    PromiseCall(api.notes.reviewNote.mutate({ id: store.currentNote!.id! }))
+                  }} 
+                  isIconOnly 
+                  color='primary' 
+                  startContent={<Icon icon="ci:check-all" width="24" height="24" />} 
+                  aria-label={t('mark-as-reviewed')} // Added aria-label for accessibility
+                />
               </Tooltip>
             }
             <Tooltip content={store.isBlinko ? t('convert-to-note') : t('convert-to-blinko')}>
-              <Button isIconOnly onPress={async e => {
-                if (!store.currentNote) return
-                await blinko.upsertNote.call({ id: store.currentNote.id, type: store.isBlinko ? NoteType.NOTE : NoteType.BLINKO })
-                await api.notes.reviewNote.mutate({ id: store.currentNote!.id! })
-                await blinko.dailyReviewNoteList.call()
-              }}
+              <Button 
+                isIconOnly 
+                onPress={async e => {
+                  if (!store.currentNote) return
+                  await blinko.upsertNote.call({ id: store.currentNote.id, type: store.isBlinko ? NoteType.NOTE : NoteType.BLINKO })
+                  await api.notes.reviewNote.mutate({ id: store.currentNote!.id! })
+                  await blinko.dailyReviewNoteList.call()
+                }}
                 color='default'
-                startContent={store.isBlinko ? <NotesIcon /> : <LightningIcon />}>
-              </Button>
+                startContent={store.isBlinko ? <NotesIcon /> : <LightningIcon />} 
+                aria-label={store.isBlinko ? t('convert-to-note') : t('convert-to-blinko')} // Added aria-label for accessibility
+              />
             </Tooltip>
 
             <Tooltip content={t('edit')} >
-              <Button onPress={async e => {
-                if (!store.currentNote) return
-                const note = await api.notes.detail.mutate({ id:  store.currentNote.id! })
-                RootStore.Get(DialogStandaloneStore).setData({
-                  isOpen: true,
-                  onlyContent: true,
-                  showOnlyContentCloseButton: true,
-                  size: '4xl',
-                  content: <BlinkoCard blinkoItem={note!} withoutHoverAnimation />
-                })
-              }} isIconOnly color='default' startContent={<Icon icon="tabler:edit" width="20" height="20" />}></Button>
+              <Button 
+                onPress={async e => {
+                  if (!store.currentNote) return
+                  const note = await api.notes.detail.mutate({ id:  store.currentNote.id! })
+                  RootStore.Get(DialogStandaloneStore).setData({
+                    isOpen: true,
+                    onlyContent: true,
+                    showOnlyContentCloseButton: true,
+                    size: '4xl',
+                    content: <BlinkoCard blinkoItem={note!} withoutHoverAnimation />
+                  })
+                }} 
+                isIconOnly 
+                color='default' 
+                startContent={<Icon icon="tabler:edit" width="20" height="20" />} 
+                aria-label={t('edit-note')} // Added aria-label for accessibility
+              ></Button>
             </Tooltip>
 
 
             <Tooltip content={t('archive')} >
-              <Button onPress={async e => {
-                if (!store.currentNote) return
-                await blinko.upsertNote.call({ id: store.currentNote.id, isArchived: true })
-                await blinko.dailyReviewNoteList.call()
-              }} isIconOnly color='default' startContent={<Icon icon="eva:archive-outline" width="20" height="20" />}></Button>
+              <Button 
+                onPress={async e => {
+                  if (!store.currentNote) return
+                  await blinko.upsertNote.call({ id: store.currentNote.id, isArchived: true })
+                  await blinko.dailyReviewNoteList.call()
+                }} 
+                isIconOnly 
+                color='default' 
+                startContent={<Icon icon="eva:archive-outline" width="20" height="20" />} 
+                aria-label={t('archive-note')} // Added aria-label for accessibility
+              ></Button>
             </Tooltip>
 
             <Button
@@ -205,7 +226,12 @@ const App = observer(() => {
                     RootStore.Get(DialogStandaloneStore).close()
                   }
                 })
-              }} isIconOnly color='danger' startContent={<Icon icon="mingcute:delete-2-line" width="20" height="20" />}></Button>
+              }} 
+              isIconOnly 
+              color='danger' 
+              startContent={<Icon icon="mingcute:delete-2-line" width="20" height="20" />} 
+              aria-label={t('delete-note')} // Added aria-label for accessibility
+            ></Button>
           </div>
         </>
       }

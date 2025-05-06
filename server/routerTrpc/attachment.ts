@@ -4,6 +4,8 @@ import { prisma } from '../prisma';
 import { Prisma } from '@prisma/client';
 import path from 'path';
 import { FileService } from '../lib/files';
+import { RootStore } from '../../app/src/store/root';
+import { ToastPlugin } from '../../app/src/store/module/Toast/Toast';
 
 export interface AttachmentResult {
   id: number | null;
@@ -357,7 +359,8 @@ export const attachmentsRouter = router({
             message: 'Files moved successfully'
           };
         } catch (error) {
-          console.error('Move file error:', error);
+          console.error('Error:', `Move file error: ${error.message}`);
+          RootStore.Get(ToastPlugin).error(`Move file error: ${error.message}`);
           throw new Error(`Failed to move files: ${error.message}`);
         }
       });

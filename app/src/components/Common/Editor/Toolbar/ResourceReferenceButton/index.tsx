@@ -69,7 +69,11 @@ export const ResourceReferenceButton = observer(({ store }: Props) => {
     <Popover isOpen={isOpen} onOpenChange={setIsOpen} placement="bottom">
       <PopoverTrigger>
         <div className="hover:bg-default-100 rounded-md">
-          <IconButton icon="hugeicons:file-link" tooltip={t('referenceResource')} />
+          <IconButton 
+            icon="hugeicons:file-link" 
+            tooltip={t('referenceResource')} 
+            aria-label={t('referenceResource')} // Added aria-label for accessibility
+          />
         </div>
       </PopoverTrigger>
       <PopoverContent className="w-[300px] sm:w-[300px]">

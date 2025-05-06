@@ -138,7 +138,7 @@ const AIPage = observer(() => {
               {isLoadingUserInfo ? (
                 <div>{t('loading-user-info')}</div>
               ) : (
-                t('welcome-to-blinko', { name: `${(userStore.nickname || userStore.name || t('user')).toUpperCase()}!` })
+                t('welcome-to-blinko', { name: userStore.nickname || userStore.name || t('user') })
               )}
             </motion.div>
           </div>

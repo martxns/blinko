@@ -21,7 +21,6 @@ import { userCaller } from '../routerTrpc/_app';
 import { LibSQLVector } from './vector';
 import { getAllPathTags } from '@server/lib/helper';
 
-
 export function isImage(filePath: string): boolean {
   if (!filePath) return false;
   const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg'];

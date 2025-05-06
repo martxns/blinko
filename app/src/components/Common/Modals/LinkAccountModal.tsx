@@ -62,6 +62,7 @@ export const LinkAccountModal = observer(() => {
         placeholder={'12345678'}
         value={password}
         onChange={(e) => setPassword(e.target.value)}
+        aria-label={t('Enter your password')} // Added aria-label for accessibility
       />
 
       <Alert color={'warning'} title={t('link-account-warning')} />

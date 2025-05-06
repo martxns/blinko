@@ -2,6 +2,8 @@ import { router, authProcedure, publicProcedure } from '@server/middleware';
 import { z } from 'zod';
 import { prisma } from '@server/prisma';
 import { InputNotificationType, notificationsSchema, notificationType, NotificationType } from '@shared/lib/prismaZodType';
+import { RootStore } from '../../app/src/store/root';
+import { ToastPlugin } from '../../app/src/store/module/Toast/Toast';
 
 export const CreateNotification = async (input: {
   title: string,
@@ -25,7 +27,8 @@ export const CreateNotification = async (input: {
       data: { ...input, accountId: Number(input.accountId) },
     });
   } catch (error) {
-    console.log(error)
+    console.error('Error:', error.message || 'An error occurred');
+    RootStore.Get(ToastPlugin).error(error.message || 'An error occurred');
   }
 }
 

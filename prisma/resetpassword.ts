@@ -25,13 +25,13 @@ async function main() {
       data: { password }
     })
   } catch (error) {
-    console.log(error)
+    // console.log(error)
   }
 }
 
 main()
   .then(e => {
-    console.log("✨ Reset password done! Your password is 123456 ✨")
+    // console.log("✨ Reset password done! Your password is 123456 ✨")
   })
   .catch((e) => {
     console.error(e);

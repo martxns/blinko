@@ -99,6 +99,7 @@ const AiWritePop = observer(() => {
               value={ai.writeQuestion}
               onChange={(e) => ai.writeQuestion = e.target.value}
               placeholder={'Prompt...'}
+              aria-label={t('Enter your AI prompt')} // Added aria-label for accessibility
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
                   store.handleSubmit()

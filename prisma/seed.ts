@@ -93,13 +93,13 @@ async function main() {
       }
     }
   } catch (error) {
-    console.log(error)
+    // console.log(error)
   }
 }
 
 main()
   .then(e => {
-    console.log("✨ Seed done! ✨")
+    // console.log("✨ Seed done! ✨")
   })
   .catch((e) => {
     console.error(e);

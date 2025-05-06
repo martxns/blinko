@@ -55,7 +55,7 @@ export const UploadFileWrapper = observer(({ onUpload, children, acceptImage = f
   });
 
   return <div {...getRootProps()}>
-    <input {...getInputProps()} />
+    <input {...getInputProps()} aria-label={t('Upload a file')} />
     {children ?
       <div onClick={open}>{children}</div>
       : <Button

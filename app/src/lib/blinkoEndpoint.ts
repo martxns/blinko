@@ -1,21 +1,15 @@
 export function getBlinkoEndpoint(path: string = ''): string {
     try {
-        const blinkoEndpoint = window.localStorage.getItem('blinkoEndpoint')
+        const blinkoEndpoint = window.localStorage.getItem('blinkoEndpoint');
         const isTauri = !!(window as any).__TAURI__;
         if (isTauri && blinkoEndpoint) {
-            try {
-                const url = new URL(path, blinkoEndpoint.replace(/"/g, ''));
-                return url.toString();
-            } catch (error) {
-                console.error(error);
-                return new URL(path, window.location.origin).toString();
-            }
+            return path; // Ensure only the relative path is returned
         }
 
-        return new URL(path, window.location.origin).toString();
+        return path;
     } catch (error) {
         console.error(error);
-        return new URL(path, window.location.origin).toString();
+        return path;
     }
 }
 

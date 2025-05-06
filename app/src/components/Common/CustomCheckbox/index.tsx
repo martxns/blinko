@@ -38,7 +38,7 @@ export const CustomCheckbox = (props) => {
   return (
     <label {...getBaseProps()}>
       <VisuallyHidden>
-        <input {...getInputProps()} />
+        <input {...getInputProps()} aria-label={isSelected ? 'Disable option' : 'Enable option'} />
       </VisuallyHidden>
       <Chip
         classNames={{

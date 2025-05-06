@@ -46,9 +46,27 @@ export const BlinkoNotification = observer(() => {
       this.markAsRead.call({ all: true });
     },
     handleMarkAsRead(notification: Notifications) {
-      if (notification.type === NotificationType.COMMENT) {
-        ShowCommentDialog(notification.metadata.noteId);
+      if (!notification.metadata) {
+        console.error("Error: Notification metadata is missing or null");
+        return;
       }
+
+      if (notification.type === NotificationType.COMMENT) {
+        if (!notification.metadata.noteId) {
+          console.error("Error: noteId is missing or null");
+          return;
+        }
+        ShowCommentDialog(notification.metadata.noteId);
+      } else if (notification.type === NotificationType.SYSTEM && notification.metadata.url) {
+        // Navigate to the specific URL if provided in metadata
+        window.location.href = notification.metadata.url;
+      } else if (notification.metadata.noteId) {
+        // Navigate to the note if noteId is available
+        window.location.href = `/note/${notification.metadata.noteId}`;
+      } else {
+        console.error("Error: Unable to determine navigation target for notification");
+      }
+
       this.markAsRead.call({ id: notification.id });
     }
   }));

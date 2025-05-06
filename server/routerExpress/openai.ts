@@ -31,12 +31,12 @@ router.options('/chat/completions', (req, res) => {
   return res.status(200).end();
 });
 
-router.post('/chat/completions', async (req, res) => {
+router.post('/chat', async (req, res) => {
   try {
     const token = await getTokenFromRequest(req);
     if (!token) {
       return res.status(401).json({
-        error: { message: 'No valid authorization token provided' }
+        error: { message: 'No valid authorization token provided' },
       });
     }
 
@@ -45,10 +45,10 @@ router.post('/chat/completions', async (req, res) => {
     const withRAG = !!config.embeddingModel;
     const withTools = !!config.tavilyApiKey;
     const withOnline = !!config.tavilyApiKey;
-    console.log('req.body', req.body);
+
     if (!req.body || typeof req.body !== 'object') {
       return res.status(400).json({
-        error: { message: 'Invalid request body' }
+        error: { message: 'Invalid request body' },
       });
     }
 
@@ -56,16 +56,16 @@ router.post('/chat/completions', async (req, res) => {
 
     if (!Array.isArray(messages)) {
       return res.status(400).json({
-        error: { message: 'Messages must be an array' }
+        error: { message: 'Messages must be an array' },
       });
     }
 
-    const conversations = messages.map(msg => ({
+    const conversations = messages.map((msg) => ({
       role: msg.role,
-      content: msg.content
+      content: msg.content,
     }));
 
-    const question = conversations.filter(msg => msg.role === 'user').pop()?.content || '';
+    const question = conversations.filter((msg) => msg.role === 'user').pop()?.content || '';
 
     const trpcClient = createServerStreamClient(req);
 
@@ -73,19 +73,21 @@ router.post('/chat/completions', async (req, res) => {
       res.set({
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache',
-        'Connection': 'keep-alive',
-        'Access-Control-Allow-Origin': '*'
+        Connection: 'keep-alive',
+        'Access-Control-Allow-Origin': '*',
       });
 
       let id = `chatcmpl-${Math.random().toString(36).substring(2, 12)}`;
-      
-      res.write(`data: ${JSON.stringify({
-        id,
-        object: 'chat.completion.chunk',
-        created: Math.floor(Date.now() / 1000),
-        model: model || 'blinko-default',
-        choices: [{ delta: { role: 'assistant' }, index: 0, finish_reason: null }]
-      })}\n\n`);
+
+      res.write(
+        `data: ${JSON.stringify({
+          id,
+          object: 'chat.completion.chunk',
+          created: Math.floor(Date.now() / 1000),
+          model: model || 'blinko-default',
+          choices: [{ delta: { role: 'assistant' }, index: 0, finish_reason: null }],
+        })}\n\n`
+      );
 
       try {
         const resStream = await trpcClient.ai.completions.mutate({
@@ -93,36 +95,42 @@ router.post('/chat/completions', async (req, res) => {
           conversations,
           withRAG,
           withTools,
-          withOnline
+          withOnline,
         });
 
         for await (const item of resStream) {
-          if (item.notes) {
-          } else if (item.chunk?.type === 'text-delta') {
-            res.write(`data: ${JSON.stringify({
-              id,
-              object: 'chat.completion.chunk',
-              created: Math.floor(Date.now() / 1000),
-              model: model || 'blinko-default',
-              choices: [{ delta: { content: item.chunk.textDelta }, index: 0, finish_reason: null }]
-            })}\n\n`);
+          if (item.chunk?.type === 'text-delta') {
+            res.write(
+              `data: ${JSON.stringify({
+                id,
+                object: 'chat.completion.chunk',
+                created: Math.floor(Date.now() / 1000),
+                model: model || 'blinko-default',
+                choices: [{ delta: { content: item.chunk.textDelta }, index: 0, finish_reason: null }],
+              })}\n\n`
+            );
           }
         }
 
-        res.write(`data: ${JSON.stringify({
-          id,
-          object: 'chat.completion.chunk',
-          created: Math.floor(Date.now() / 1000),
-          model: model || 'blinko-default',
-          choices: [{ delta: {}, index: 0, finish_reason: 'stop' }]
-        })}\n\n`);
-        
+        res.write(
+          `data: ${JSON.stringify({
+            id,
+            object: 'chat.completion.chunk',
+            created: Math.floor(Date.now() / 1000),
+            model: model || 'blinko-default',
+            choices: [{ delta: {}, index: 0, finish_reason: 'stop' }],
+          })}\n\n`
+        );
+
         res.write('data: [DONE]\n\n');
         return res.end();
       } catch (error) {
-        res.write(`data: ${JSON.stringify({
-          error: { message: error.message || 'An error occurred during processing' }
-        })}\n\n`);
+        console.error('Streaming error:', error.message);
+        res.write(
+          `data: ${JSON.stringify({
+            error: { message: error.message || 'An error occurred during processing' },
+          })}\n\n`
+        );
         return res.end();
       }
     } else {
@@ -132,7 +140,7 @@ router.post('/chat/completions', async (req, res) => {
         conversations,
         withRAG,
         withTools,
-        withOnline
+        withOnline,
       });
 
       for await (const item of resStream) {
@@ -141,9 +149,7 @@ router.post('/chat/completions', async (req, res) => {
         }
       }
 
-      return res.set({
-        'Access-Control-Allow-Origin': '*'
-      }).json({
+      return res.json({
         id: `chatcmpl-${Math.random().toString(36).substring(2, 12)}`,
         object: 'chat.completion',
         created: Math.floor(Date.now() / 1000),
@@ -153,26 +159,41 @@ router.post('/chat/completions', async (req, res) => {
             index: 0,
             message: {
               role: 'assistant',
-              content: fullResponse
+              content: fullResponse,
             },
-            finish_reason: 'stop'
-          }
+            finish_reason: 'stop',
+          },
         ],
         usage: {
           prompt_tokens: -1,
           completion_tokens: -1,
-          total_tokens: -1
-        }
+          total_tokens: -1,
+        },
       });
     }
   } catch (error) {
-    console.error('API error:', error);
-    return res.status(500).set({
-      'Access-Control-Allow-Origin': '*'
-    }).json({
-      error: { message: error.message || 'Internal server error' }
+    console.error('API error:', error.message);
+    return res.status(500).json({
+      error: { message: error.message || 'Internal server error' },
     });
   }
 });
 
-export default router; 
+router.post('/embed', async (req, res) => {
+  try {
+    const { input, model } = req.body;
+
+    if (!input || !model) {
+      return res.status(400).json({ error: 'Missing input or model parameter' });
+    }
+
+    const result = await someEmbeddingService.embed({ input, model });
+
+    res.json(result);
+  } catch (error) {
+    console.error('Embedding error:', error.message);
+    res.status(500).json({ error: 'Failed to process embedding request' });
+  }
+});
+
+export default router;

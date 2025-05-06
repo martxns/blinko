@@ -137,6 +137,7 @@ export const AiInput = observer(({ onSubmit, className }: AiInputProps) => {
             }
           }}
           onChange={(e) => (aiStore.input = e.target.value)}
+          aria-label={t('Enter your message')} // Added for accessibility
           classNames={{
             input: `!bg-transparent border-none ${mode == 'inline' ? 'min-h-[20px]' : 'min-h-[120px]'} whitespace-pre-wrap`,
             label: '!bg-transparent border-none',
@@ -172,11 +173,14 @@ export const AiInput = observer(({ onSubmit, className }: AiInputProps) => {
             onClick={async () => {
               RootStore.Get(DialogStore).setData({
                 isOpen: true,
-                size: '2xl',
-                onlyContent: true,
+                size: isPc ? '2xl' : 'lg', // Adjust size for mobile
+                onlyContent: false, // Allow header with close button
                 title: t('settings'),
                 content: (
-                  <ScrollArea className="h-full md:h-[600px]" onBottom={() => {}}>
+                  <ScrollArea
+                    className="h-full md:h-[600px] overflow-y-auto" // Ensure scrolling is enabled
+                    onBottom={() => {}}
+                  >
                     <AiSetting />
                   </ScrollArea>
                 ),

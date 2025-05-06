@@ -1,4 +1,3 @@
-
 import { BlinkoStore } from '@/store/blinkoStore';
 import { _ } from '@/lib/lodash';
 import { observer } from 'mobx-react-lite';
@@ -40,10 +39,15 @@ export const UpdateTag = observer(({ onSave, defaultValue = '', type = 'input' }
         </Select>
     }
 
-    <Button style={{ width: '30px' }} color="primary" onPress={async () => {
-      await onSave?.(store.tagName)
-      RootStore.Get(DialogStore).close()
-    }}>Save</Button>
+    <Button 
+      style={{ width: '30px' }} 
+      color="primary" 
+      onPress={async () => {
+        await onSave?.(store.tagName)
+        RootStore.Get(DialogStore).close()
+      }}
+      aria-label="Save tag"
+    >Save</Button>
   </div>
 })
 

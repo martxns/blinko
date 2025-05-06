@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import i18n from '@/lib/i18n'
 import { api } from '@/lib/trpc'
 import { type ProgressResult } from '@shared/lib/types'
@@ -90,8 +91,8 @@ export const ImportProgress = observer(({ force }: { force: boolean }) => {
           blinko.updateTicker++;
         }
       } catch (err) {
-        console.error("Error fetching rebuild progress:", err);
-        RootStore.Get(ToastPlugin).error(err?.message || "Failed to fetch progress");
+        console.error('Error:', err?.message || 'Failed to fetch progress');
+        RootStore.Get(ToastPlugin).error(err?.message || 'Failed to fetch progress');
       }
     },
 
@@ -108,7 +109,8 @@ export const ImportProgress = observer(({ force }: { force: boolean }) => {
 
         blinko.updateTicker++;
       } catch (err) {
-        RootStore.Get(ToastPlugin).error(err?.message || "Failed to start rebuild task");
+        console.error('Error:', err?.message || 'Failed to start rebuild task');
+        RootStore.Get(ToastPlugin).error(err?.message || 'Failed to start rebuild task');
       }
     },
 
@@ -132,7 +134,8 @@ export const ImportProgress = observer(({ force }: { force: boolean }) => {
         store.stopPolling();
         RootStore.Get(DialogStandaloneStore).close()
       } catch (err) {
-        RootStore.Get(ToastPlugin).error(err?.message || "Failed to stop rebuild task");
+        console.error('Error:', err?.message || 'Failed to stop rebuild task');
+        RootStore.Get(ToastPlugin).error(err?.message || 'Failed to stop rebuild task');
       }
     }
   }))

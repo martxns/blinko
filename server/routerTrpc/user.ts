@@ -168,9 +168,9 @@ export const userRouter = router({
       role: z.string()
     }))
     .query(async ({ input, ctx }) => {
-      console.log('detail', input, ctx);
+      // console.log('detail', input, ctx);
       const user = await prisma.accounts.findFirst({ where: { id: input.id ?? Number(ctx.id) } })
-      console.log('user', user);
+      // console.log('user', user);
       if (Number(user?.id) !== Number(ctx.id) && user?.role !== 'superadmin') {
         throw new TRPCError({ code: 'UNAUTHORIZED', message: 'You are not allowed to access this user' })
       }
@@ -192,7 +192,7 @@ export const userRouter = router({
     .output(z.boolean())
     .mutation(async () => {
      try {
-      console.log('canRegisterxxx')
+      // console.log('canRegisterxxx')
       const count = await prisma.accounts.count()
       if (count == 0) {
         return true
@@ -202,7 +202,7 @@ export const userRouter = router({
         return res?.config.value === true
       }
      } catch (error) {
-        console.log(error,'canRegister error')
+        // console.log(error,'canRegister error')
         return true
      }
     }),
@@ -264,7 +264,7 @@ export const userRouter = router({
               });
             }
             const res = await prisma.accounts.create({ data: { name, password: passwordHash, nickname: name, role: 'user' } })
-            await prisma.accounts.update({ where: { id: res.id }, data: { apiToken: await genToken({ id: res.id, name, role: 'user' }) } })
+            await prisma.accounts.update({ where: { id: res.id }, data: { apiToken: await genToken({ id: res.id, name: name ?? '', role: 'user' }) } })
             return true
           }
         }
@@ -278,7 +278,7 @@ export const userRouter = router({
       const user = await prisma.accounts.findFirst({ where: { id: Number(ctx.id) } })
       if (user) {
         const token = await genToken({ id: user.id, name: user.name ?? '', role: user.role })
-        console.log('token', token);
+        // console.log('token', token);
         await prisma.accounts.update({ where: { id: user.id }, data: { apiToken: token } })
         return true
       } else {
@@ -473,6 +473,20 @@ export const userRouter = router({
         })
 
         await deleteNotes(userNotes.map(note => note.id), ctx)
+
+        const userConversations = await prisma.conversation.findMany({
+          where: { accountId: id }
+        });
+
+        await prisma.message.deleteMany({
+          where: {
+            conversationId: { in: userConversations.map(convo => convo.id) }
+          }
+        });
+
+        await prisma.conversation.deleteMany({
+          where: { accountId: id }
+        });
 
         await prisma.config.deleteMany({
           where: { userId: id }

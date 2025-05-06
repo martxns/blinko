@@ -24,6 +24,7 @@ export default function OAuthCallback() {
       const userId = params.get('userId') || userStore.id;
       
       if (!userId) {
+        console.error('Error:', t('verification-failed'));
         RootStore.Get(ToastPlugin).error(t('verification-failed'));
         return { ok: false, error: 'Missing user ID' };
       }
@@ -50,11 +51,13 @@ export default function OAuthCallback() {
           success: false,
           error: res?.error || t('invalid-2fa-code'),
         });
+        console.error('Error:', res?.error || t('invalid-2fa-code'));
         RootStore.Get(ToastPlugin).error(res?.error || t('invalid-2fa-code'));
       }
       
       return res;
     } catch (error) {
+      console.error('Error:', t('verification-failed'));
       RootStore.Get(ToastPlugin).error(t('verification-failed'));
       return { ok: false, error: 'Failed to verify code' };
     }
@@ -72,6 +75,7 @@ export default function OAuthCallback() {
         
         if (errorMsg) {
           setError(errorMsg);
+          console.error('Error:', `${t('login-failed')}: ${errorMsg}`);
           RootStore.Get(ToastPlugin).error(`${t('login-failed')}: ${errorMsg}`);
           setTimeout(() => {
             navigate('/signin');
@@ -111,6 +115,7 @@ export default function OAuthCallback() {
               } else {
               }
             } catch (err) {
+              console.error('Error:', t('login-failed'));
               RootStore.Get(ToastPlugin).error(t('login-failed'));
               navigate('/signin');
             }
@@ -120,6 +125,7 @@ export default function OAuthCallback() {
             if (tokenData?.user) {
               navigate('/');
             } else {
+              console.error('Error:', t('login-failed'));
               RootStore.Get(ToastPlugin).error(t('login-failed'));
               navigate('/signin');
             }
@@ -134,6 +140,7 @@ export default function OAuthCallback() {
         } else if (tokenData?.user) {
           navigate('/');
         } else {
+          console.error('Error:', t('login-failed'));
           RootStore.Get(ToastPlugin).error(t('login-failed'));
           navigate('/signin');
         }
@@ -141,6 +148,7 @@ export default function OAuthCallback() {
         setIsLoading(false);
       } catch (error) {
         setError('handle oauth callback error');
+        console.error('Error:', t('login-failed'));
         RootStore.Get(ToastPlugin).error(t('login-failed'));
         setTimeout(() => {
           navigate('/signin');
@@ -164,7 +172,7 @@ export default function OAuthCallback() {
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen p-4 text-center">
-        <div className="mb-4 text-3xl">😢</div>
+        <div className="mb-4 text-3xl"></div>
         <h1 className="text-xl font-bold mb-2">{t('authentication-failed')}</h1>
         <p className="text-sm text-red-500 mb-4">{error}</p>
         <p>{t('redirecting-to-login')}...</p>
@@ -173,4 +181,4 @@ export default function OAuthCallback() {
   }
 
   return <LoadingPage />;
-} 
+}

@@ -44,7 +44,11 @@ export default function Component() {
             <Input
               isRequired
               endContent={
-                <button type="button" onClick={toggleVisibility}>
+                <button 
+                  type="button" 
+                  onClick={toggleVisibility}
+                  aria-label={isVisible ? t('hide-password') : t('show-password')} // Added aria-label for accessibility
+                >
                   {isVisible ? (
                     <Icon
                       className="pointer-events-none text-2xl text-default-400"
@@ -95,9 +99,11 @@ export default function Component() {
             />
             <Button color="primary" type="submit" onPress={async e => {
               if (!user || !password || !password2) {
+                console.error('Error:', t('required-items-cannot-be-empty'));
                 return RootStore.Get(ToastPlugin).error(t('required-items-cannot-be-empty'))
               }
               if (password != password2) {
+                console.error('Error:', t('the-two-passwords-are-inconsistent'));
                 return RootStore.Get(ToastPlugin).error(t('the-two-passwords-are-inconsistent'))
               }
               try {
@@ -107,6 +113,7 @@ export default function Component() {
                   navigate('/signin')
                 }, 1000)
               } catch (error) {
+                console.error('Error:', error.message);
                 return RootStore.Get(ToastPlugin).error(error.message)
               }
             }}>

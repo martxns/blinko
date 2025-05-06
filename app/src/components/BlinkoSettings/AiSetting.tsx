@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import { observer } from 'mobx-react-lite';
 import { Autocomplete, AutocompleteItem, Button, Code, Input, Select, SelectItem, Switch, Tooltip, Chip, Slider, Textarea } from '@heroui/react';
 import { RootStore } from '@/store';
@@ -18,6 +19,35 @@ import { ToastPlugin } from '@/store/module/Toast/Toast';
 import axios from 'axios';
 import { StorageListState } from '@/store/standard/StorageListState';
 import { IconButton } from '../Common/Editor/Toolbar/IconButton';
+
+const fetchFromApi = async (url: string, headers: Record<string, string>, method: 'GET' | 'POST' = 'GET', body?: any) => {
+  try {
+    // Ensure the URL is relative and uses the backend proxy
+    const proxyUrl = `/api/proxy?path=${encodeURIComponent(url)}`;
+
+    const options: any = {
+      method,
+      headers,
+    };
+    if (body) {
+      options.body = JSON.stringify(body);
+    }
+
+    const response = await axios(proxyUrl, options);
+
+    // Check if the response is JSON
+    if (response.headers['content-type']?.includes('application/json')) {
+      return response.data;
+    } else {
+      // Handle non-JSON responses (e.g., plain text)
+      console.info('Non-JSON response:', response.data);
+      return response.data; // Return the raw response data
+    }
+  } catch (error) {
+    console.error('API call failed:', error.message);
+    throw error;
+  }
+};
 
 export const AiSetting = observer(() => {
   const blinko = RootStore.Get(BlinkoStore);
@@ -71,6 +101,7 @@ export const AiSetting = observer(() => {
   }, []);
 
   const store = RootStore.Local(() => ({
+    apiEndPoint: '', // Existing state for embedding/chat
     isVisible: false,
     isEmbeddingKeyVisible: false,
     apiKey: '',
@@ -79,7 +110,6 @@ export const AiSetting = observer(() => {
     aiCommentPrompt: '',
     aiTagsPrompt: '',
     embeddingApiEndpoint: '',
-    apiEndPoint: '',
     aiModel: '',
     tavilyApiKey: '',
     embeddingModel: '',
@@ -103,59 +133,80 @@ export const AiSetting = observer(() => {
       try {
         const provider = blinko.config.value?.aiModelProvider!;
         let modelList: any = [];
-        const endpoint = new URL(blinko.config.value?.aiApiEndpoint!);
+        let endpoint = store.apiEndPoint?.trim();
+
+        if (!endpoint) {
+          console.error('Error:', t('API endpoint is not set. Please configure it in the settings'));
+          RootStore.Get(ToastPlugin).error(t('API endpoint is not set. Please configure it in the settings'));
+          return;
+        }
+
+        if (!endpoint.endsWith('/api')) {
+          endpoint = `${endpoint.replace(/\/$/, '')}/api`;
+        }
+
         if (provider === 'Ollama') {
-          console.log(blinko.config.value?.aiApiEndpoint);
-          let { data } = await axios.get(`${!!endpoint ? `${endpoint.origin}/api` : 'http://127.0.0.1:11434/api'}/tags`);
-          modelList = data.models.map(model => ({
+          const apiUrl = `${endpoint}/tags`;
+          const data = await fetchFromApi(apiUrl, {
+            'Authorization': `Bearer ${blinko.config.value?.embeddingApiKey}`,
+          });
+          modelList = data.models.map((model: any) => ({
             label: model.name,
-            value: model.name
+            value: model.name,
           }));
           this.aiModelSelect.save(modelList);
           this.embeddingModelSelect.save(modelList);
           this.rerankModelSelect.save(modelList);
         } else {
           try {
-            let { data } = await axios.get(`${!!endpoint ? endpoint.href : 'https://api.openai.com'}/models`, {
-              headers: {
-                'Authorization': `Bearer ${blinko.config.value?.aiApiKey}`
-              }
+            const apiUrl = `${endpoint}/models`;
+            const data = await fetchFromApi(apiUrl, {
+              'Authorization': `Bearer ${blinko.config.value?.aiApiKey}`,
             });
-            modelList = data.data.map(model => ({
+            modelList = data.data.map((model: any) => ({
               label: model.id,
-              value: model.id
+              value: model.id,
             }));
             this.aiModelSelect.save(modelList);
             this.embeddingModelSelect.save(modelList);
             this.rerankModelSelect.save(modelList);
           } catch (error) {
+            console.error('Error:', error.message || 'ERROR');
             RootStore.Get(ToastPlugin).error(error.message || 'ERROR');
           }
         }
-        if (blinko.config.value?.embeddingApiEndpoint) {
-          const embeddingEndpoint = new URL(blinko.config.value?.embeddingApiEndpoint);
-          let { data } = await axios.get(`${!!embeddingEndpoint ? embeddingEndpoint.href : 'https://api.openai.com'}/models`, {
-            headers: {
-              'Authorization': `Bearer ${blinko.config.value?.embeddingApiKey}`
-            }
-          });
-          this.embeddingModelSelect.save(data.data.map(model => ({
-            label: model.id,
-            value: model.id
-          })));
-          if (this.rerankUseEembbingEndpoint) {
-            this.rerankModelSelect.save(data.data.map(model => ({
-              label: model.id,
-              value: model.id
-            })));
-          }
-        }
+
         RootStore.Get(ToastPlugin).success(t('model-list-updated'));
       } catch (error) {
-        console.log(error);
+        console.error('Error:', error.message || 'ERROR');
         RootStore.Get(ToastPlugin).error(error.message || 'ERROR');
       }
-    }
+    },
+
+    async fetchChatCompletions(messages: any[]) {
+      try {
+        const apiUrl = `${store.apiEndPoint?.trim().replace(/\/$/, '')}/api/chat/completions`;
+        const data = await fetchFromApi(apiUrl, {
+          'Authorization': `Bearer ${store.apiKey}`,
+          'Content-Type': 'application/json',
+        }, 'POST', { messages });
+        console.log('Chat response:', data);
+      } catch (error) {
+        console.error('Chat request failed:', error);
+      }
+    },
+
+    async fetchEmbeddings() {
+      try {
+        const apiUrl = `${store.apiEndPoint?.trim().replace(/\/$/, '')}/api`;
+        await fetchFromApi(apiUrl, {
+          'Authorization': `Bearer ${store.apiKey}`,
+        });
+      } catch (error) {
+        console.error('Embeddings request failed:', error);
+      }
+    },
+
   }));
 
   useEffect(() => {
@@ -309,19 +360,7 @@ export const AiSetting = observer(() => {
               <div className="flex flex-col gap-1">
                 <>{t('endpoint')}</>
                 {blinko.config.value?.aiModelProvider == 'Ollama' ? <div className="text-desc text-xs">http://127.0.0.1:11434/api</div>
-                  : <div className="text-desc text-xs">{
-                    (() => {
-                      try {
-                        const baseUrl = store.apiEndPoint?.trim() ? store.apiEndPoint : 'https://api.openai.com';
-                        const urlWithProtocol = baseUrl.startsWith('http://') || baseUrl.startsWith('https://') 
-                          ? baseUrl 
-                          : `https://${baseUrl}`;
-                        return new URL('/chat/completions', urlWithProtocol).href;
-                      } catch (e) {
-                        return 'https://api.openai.com/chat/completions';
-                      }
-                    })()
-                  }</div>}
+                  : <div className="text-desc text-xs">{new URL(!!store.apiEndPoint ? store.apiEndPoint : 'https://api.openai.com').href + 'chat/completions'}</div>}
               </div>
             }
             rightContent={
@@ -331,7 +370,7 @@ export const AiSetting = observer(() => {
                   label={t('api-endpoint')}
                   variant="bordered"
                   className="w-full md:w-[300px]"
-                  placeholder="https://api.openapi.com/v1/"
+                  placeholder="http://127.0.0.1:11434/api"
                   value={store.apiEndPoint}
                   onChange={(e) => {
                     store.apiEndPoint = e.target.value;
@@ -350,23 +389,48 @@ export const AiSetting = observer(() => {
                   icon="hugeicons:connect"
                   containerSize={40}
                   tooltip={<div>{t('check-connect')}</div>}
-                  onClick={async (e) => {
-                    if (!blinko.config.value?.embeddingModel) {
-                      RootStore.Get(ToastPlugin).error(t('please-set-the-embedding-model'));
-                      return;
+                  onClick={async () => {
+                    try {
+                      if (!store.apiEndPoint) {
+                        console.error('Error:', t('Please set the API endpoint'));
+                        RootStore.Get(ToastPlugin).error(t('Please set the API endpoint'));
+                        return;
+                      }
+
+                      // Strip `/api` for the connection test
+                      const baseUrl = store.apiEndPoint.replace(/\/api$/, '');
+
+                      // Test connection to the base URL
+                      try {
+                        const response = await fetchFromApi(baseUrl, {
+                          'Authorization': `Bearer ${store.apiKey}`,
+                        });
+
+                        // Handle "Ollama is running" as a success
+                        if (typeof response === 'string' && response.includes('Ollama is running')) {
+                          RootStore.Get(ToastPlugin).success(t('Ollama is running'));
+                        } else if (typeof response === 'object') {
+                          RootStore.Get(ToastPlugin).success(t('Connection successful'));
+                        } else {
+                          console.error('Error:', t('Unexpected response format'));
+                          RootStore.Get(ToastPlugin).error(t('Unexpected response format'));
+                        }
+                      } catch (error) {
+                        console.error('Error:', t('Connection failed'));
+                        RootStore.Get(ToastPlugin).error(t('Connection failed'));
+                        return; // Stop further tests if the connection fails
+                      }
+
+                    } catch (error) {
+                      console.error('Error:', t('An unexpected error occurred'));
+                      RootStore.Get(ToastPlugin).error(t('An unexpected error occurred'));
                     }
-                    RootStore.Get(ToastPlugin).promise(api.ai.testConnect.mutate(), {
-                      loading: t('loading'),
-                      success: t('check-connect-success'),
-                      error: t('check-connect-error'),
-                    });
                   }}
                 />
               </div>
             }
           />
         )}
-
 
         {
           blinko.config.value?.aiModelProvider != 'Ollama' &&
@@ -805,7 +869,9 @@ export const AiSetting = observer(() => {
                   </div>
                 }
               />
-              <Chip size="sm" color="warning" className="text-white cursor-pointer" onClick={() => (store.showRerankAdvancedSetting = !store.showRerankAdvancedSetting)}>
+              <Chip size="sm" color="warning" className="text-white cursor-pointer" onClick={() => {
+                store.showRerankAdvancedSetting = !store.showRerankAdvancedSetting;
+              }}>
                 {t('advanced')}
               </Chip>
             </div>
@@ -895,8 +961,7 @@ export const AiSetting = observer(() => {
           <Item
             className="ml-6"
             type={isPc ? 'row' : 'col'}
-            leftContent={<>{t('rerank')} Top K</>
-            }
+            leftContent={<>{t('rerank')} Top K</>}
             rightContent={
               <div className="flex md:w-[300px] w-full ml-auto justify-start">
                 <Slider

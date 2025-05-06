@@ -72,7 +72,14 @@ export const ScrollableTabs = ({ items, selectedKey, onSelectionChange, color = 
   return (
     <div className="relative" ref={containerRef}>
       {showLeftArrow && (
-        <Button isIconOnly variant="light" className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-background/60 backdrop-blur-sm" size="sm" onPress={() => scroll('left')}>
+        <Button 
+          isIconOnly 
+          variant="light" 
+          className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-background/60 backdrop-blur-sm" 
+          size="sm" 
+          onPress={() => scroll('left')} 
+          aria-label={t('scroll-left')} // Added aria-label for accessibility
+        >
           <Icon icon="tabler:chevron-left" width="18" />
         </Button>
       )}
@@ -105,7 +112,14 @@ export const ScrollableTabs = ({ items, selectedKey, onSelectionChange, color = 
         ))}
       </Tabs>
       {showRightArrow && (
-        <Button isIconOnly variant="light" className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-background/60 backdrop-blur-sm" size="sm" onPress={() => scroll('right')}>
+        <Button 
+          isIconOnly 
+          variant="light" 
+          className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-background/60 backdrop-blur-sm" 
+          size="sm" 
+          onPress={() => scroll('right')} 
+          aria-label={t('scroll-right')} // Added aria-label for accessibility
+        >
           <Icon icon="tabler:chevron-right" width="18" />
         </Button>
       )}

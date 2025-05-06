@@ -1,4 +1,3 @@
-import * as React from 'react'; // Add a fallback for React namespace
 import { _ } from '@/lib/lodash';
 import { Store } from './standard/base';
 import { ToastPlugin } from './module/Toast/Toast';

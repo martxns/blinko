@@ -55,10 +55,11 @@ export const UploadButtons = ({ getInputProps, open, onFileUpload }: Props) => {
             icon={action.icon}
             tooltip={action.title}
             onClick={action.onClick}
+            aria-label={action.title} // Added aria-label for accessibility
           >
             {action.key === 'file' && <input {...getInputProps()} />}
           </IconButton>
         ))}
     </>
   );
-}; 
+};

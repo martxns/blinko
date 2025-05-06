@@ -11,6 +11,7 @@
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
+    "types": ["node"],
     "strict": true,
     "noUnusedLocals": false,
     "noUnusedParameters": false,
@@ -24,4 +25,4 @@
   },
   "include": ["app/src", "server"],
   "references": [{ "path": "./tsconfig.node.json" }]
-} 
+}

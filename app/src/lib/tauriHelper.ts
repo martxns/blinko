@@ -51,7 +51,7 @@ export async function downloadFromLink(uri: string, filename?: string) {
     }
 
     try {
-        RootStore.Get(ToastPlugin).loading(i18n.t('downloading'), { id: 'downloading' })
+        RootStore.Get(ToastPlugin).loading(`${i18n.t('downloading')}`, { id: 'downloading' })
 
         if (!filename) {
             const url = new URL(uri);
@@ -73,7 +73,7 @@ export async function downloadFromLink(uri: string, filename?: string) {
             );
 
             RootStore.Get(ToastPlugin).dismiss('downloading');
-            RootStore.Get(ToastPlugin).success(i18n.t('download-success') + ' ' + downloadDirPath);
+            RootStore.Get(ToastPlugin).success(`${i18n.t('download-success')} ${downloadDirPath}`);
         } else if (platform() !== 'ios') {
             const savePath = await save({
                 filters: [
@@ -96,12 +96,13 @@ export async function downloadFromLink(uri: string, filename?: string) {
                 );
 
                 RootStore.Get(ToastPlugin).dismiss('downloading');
-                RootStore.Get(ToastPlugin).success(i18n.t('download-success'));
+                RootStore.Get(ToastPlugin).success(`${i18n.t('download-success')}`);
             }
         }
 
         //todo: IOS download
     } catch (error) {
+        console.error('Error:', error instanceof Error ? error.message : String(error));
         RootStore.Get(ToastPlugin).dismiss('downloading');
         RootStore.Get(ToastPlugin).error(`${i18n.t('download-failed')}: ${error instanceof Error ? error.message : String(error)}`);
     }

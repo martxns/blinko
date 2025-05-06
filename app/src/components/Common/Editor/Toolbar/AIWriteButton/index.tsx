@@ -58,6 +58,7 @@ export const AIWriteButton = observer(() => {
           <IconButton
             tooltip={t('ai-write')}
             icon="hugeicons:quill-write-01"
+            aria-label={t('ai-write')} // Added aria-label for accessibility
           />
         </div>
       </PopoverTrigger>
@@ -181,4 +182,4 @@ export const AIWriteButton = observer(() => {
       </PopoverContent>
     </Popover>
   );
-}); 
+});

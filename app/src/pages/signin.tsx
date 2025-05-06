@@ -75,6 +75,7 @@ export default function Component() {
         }
 
         if (res?.error) {
+          console.error('Error:', res.error);
           RootStore.Get(ToastPlugin).error(res.error);
         }
 
@@ -119,7 +120,7 @@ export default function Component() {
         saveBlinkoEndpoint(endpoint);
       }
     } catch (error) {
-      console.error('Login error:', error);
+      console.error('Error:', t('login-failed'));
       RootStore.Get(ToastPlugin).error(t('login-failed'));
     }
   };
@@ -187,7 +188,11 @@ export default function Component() {
             />
             <Input
               endContent={
-                <button type="button" onClick={() => setIsVisible(!isVisible)}>
+                <button 
+                  type="button" 
+                  onClick={() => setIsVisible(!isVisible)}
+                  aria-label={isVisible ? t('hide-password') : t('show-password')} // Added aria-label for accessibility
+                >
                   {isVisible ? (
                     <Icon
                       className="pointer-events-none text-2xl text-default-400"

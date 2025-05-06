@@ -115,6 +115,7 @@ export const BlinkoFollowDialog = observer(({ onConfirm }: { onConfirm: () => vo
               size="sm"
               radius="full"
               startContent={<Icon icon="ion:refresh" className="w-4 h-4" />}
+              aria-label={t('refresh-site-list')} // Added aria-label for accessibility
             ></Button>
           </div>
         }

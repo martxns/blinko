@@ -22,6 +22,7 @@ import s3fileRouter from './routerExpress/file/s3file';
 import pluginRouter from './routerExpress/file/plugin';
 import rssRouter from './routerExpress/rss';
 import openaiRouter from './routerExpress/openai';
+import proxyRouter from './routerExpress/proxyRouter';
 
 // Vite integration
 import ViteExpress from 'vite-express';
@@ -120,7 +121,10 @@ async function setupApiRoutes(app: express.Application) {
 
   // Other API endpoints
   app.use('/api/rss', rssRouter);
-  app.use('/v1', openaiRouter);
+  app.use('/api', openaiRouter);
+
+  // Proxy route
+  app.use('/api', proxyRouter);
 
   // OpenAPI integration
   app.use('/api',
@@ -224,4 +228,4 @@ async function bootstrap() {
 }
 
 // Start the server
-bootstrap(); 
+bootstrap();
