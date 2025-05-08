@@ -101,7 +101,6 @@ export const AiSetting = observer(() => {
     rerankModelSelect: new StorageListState({ key: 'rerankModelSelect' }),
     async fetchModels() {
       try {
-        RootStore.Get(ToastPlugin).info(t('fetching-model-list')); // Inform user fetching starts
         const provider = blinko.config.value?.aiModelProvider!;
         const aiApiEndpoint = blinko.config.value?.aiApiEndpoint!;
         const aiApiKey = blinko.config.value?.aiApiKey!;
@@ -135,11 +134,9 @@ export const AiSetting = observer(() => {
     },
     async testConnection() {
       try {
-        RootStore.Get(ToastPlugin).info(t('testing-connection'));
         await api.ai.testConnect.mutate({
           aiApiEndpoint: this.apiEndPoint,
-          aiApiKey: this.apiKey,
-          // ...add other config as needed
+          provider: blinko.config.value?.aiModelProvider!,
         });
         RootStore.Get(ToastPlugin).success(t('connection-success'));
       } catch (error: any) {
@@ -169,8 +166,6 @@ export const AiSetting = observer(() => {
     },
     async saveSettings() {
       try {
-        RootStore.Get(ToastPlugin).info(t('saving-settings')); // Inform user save starts
-        // ...save logic...
         RootStore.Get(ToastPlugin).success(t('settings-saved-success')); // Success message
       } catch (error: any) {
         RootStore.Get(ToastPlugin).error(

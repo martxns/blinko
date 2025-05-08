@@ -272,7 +272,6 @@ export const aiRouter = router({
         await testOllamaConnection(input.aiApiEndpoint);
         return { success: true };
       }
-      // ...other providers...
     }),
 
   fetchModels: authProcedure
