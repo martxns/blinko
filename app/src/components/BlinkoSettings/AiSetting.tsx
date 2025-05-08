@@ -372,11 +372,17 @@ export const AiSetting = observer(() => {
                       RootStore.Get(ToastPlugin).error(t('please-set-the-embedding-model'));
                       return;
                     }
-                    RootStore.Get(ToastPlugin).promise(api.ai.testConnect.mutate(), {
-                      loading: t('loading'),
-                      success: t('check-connect-success'),
-                      error: t('check-connect-error'),
-                    });
+                    RootStore.Get(ToastPlugin).promise(
+                      api.ai.testConnect.mutate({
+                        aiApiEndpoint: store.apiEndPoint,
+                        provider: blinko.config.value?.aiModelProvider!,
+                      }),
+                      {
+                        loading: t('loading'),
+                        success: t('check-connect-success'),
+                        error: t('check-connect-error'),
+                      }
+                    );
                   }}
                 />
               </div>
@@ -523,7 +529,12 @@ export const AiSetting = observer(() => {
                   </div>
                 }
               />
-              <Chip size="sm" color="warning" className="text-white cursor-pointer" onClick={() => (store.showEmeddingAdvancedSetting = !store.showEmeddingAdvancedSetting)}>
+              <Chip
+                size="sm"
+                color="warning"
+                className="text-white cursor-pointer"
+                onClick={() => (store.showEmeddingAdvancedSetting = !store.showEmeddingAdvancedSetting)}
+              >
                 {t('advanced')}
               </Chip>
             </div>
@@ -822,7 +833,12 @@ export const AiSetting = observer(() => {
                   </div>
                 }
               />
-              <Chip size="sm" color="warning" className="text-white cursor-pointer" onClick={() => (store.showRerankAdvancedSetting = !store.showRerankAdvancedSetting)}>
+              <Chip
+                size="sm"
+                color="warning"
+                className="text-white cursor-pointer"
+                onClick={() => (store.showRerankAdvancedSetting = !store.showRerankAdvancedSetting)}
+              >
                 {t('advanced')}
               </Chip>
             </div>

@@ -16,8 +16,15 @@ function normalizeOllamaBaseUrl(url: string) {
 // Ollama: Test connection
 async function testOllamaConnection(baseUrl: string) {
   const endpoint = normalizeOllamaBaseUrl(baseUrl);
-  const res = await axios.get(`${endpoint}/`);
-  if (res.status === 200 && res.data?.version) return true;
+  const res = await axios.get(`${endpoint}/`, { validateStatus: () => true });
+  if (res.status === 200) {
+    // Optionally, check for the expected text:
+    if (typeof res.data === 'string' && res.data.toLowerCase().includes('ollama')) {
+      return true;
+    }
+    // Or just accept any 200
+    return true;
+  }
   throw new Error('Ollama not reachable');
 }
 
