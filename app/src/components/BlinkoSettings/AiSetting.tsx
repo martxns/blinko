@@ -135,12 +135,35 @@ export const AiSetting = observer(() => {
     },
     async testConnection() {
       try {
-        RootStore.Get(ToastPlugin).info(t('testing-connection')); // Inform user test starts
-        await api.ai.testConnect.mutate();
-        RootStore.Get(ToastPlugin).success(t('connection-success')); // Success message
+        RootStore.Get(ToastPlugin).info(t('testing-connection'));
+        await api.ai.testConnect.mutate({
+          aiApiEndpoint: this.apiEndPoint,
+          aiApiKey: this.apiKey,
+          // ...add other config as needed
+        });
+        RootStore.Get(ToastPlugin).success(t('connection-success'));
       } catch (error: any) {
+        // Log the error for debugging
+        console.error('Connection test error:', error);
+
+        // Try to extract a more helpful message
+        let message =
+          error?.data?.message ||
+          error?.message ||
+          (typeof error === 'string' ? error : '') ||
+          t('unknown-error');
+
+        // If still not helpful, show the error as a string or JSON
+        if (!message || message === t('unknown-error')) {
+          if (typeof error === 'object') {
+            message = JSON.stringify(error, null, 2);
+          } else {
+            message = String(error);
+          }
+        }
+
         RootStore.Get(ToastPlugin).error(
-          `${t('connection-failed')}: ${error?.data?.message || error?.message || t('unknown-error')}`
+          `${t('connection-failed')}: ${message}`
         );
       }
     },

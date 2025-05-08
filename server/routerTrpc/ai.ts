@@ -7,6 +7,36 @@ import { CoreMessage } from '@mastra/core';
 import { AiModelFactory } from '@server/aiServer/aiModelFactory';
 import { RebuildEmbeddingJob } from '../jobs/rebuildEmbeddingJob';
 import { getAllPathTags } from '@server/lib/helper';
+import axios from 'axios';
+
+function normalizeOllamaBaseUrl(url: string) {
+  return url.replace(/\/$/, '');
+}
+
+// Ollama: Test connection
+async function testOllamaConnection(baseUrl: string) {
+  const endpoint = normalizeOllamaBaseUrl(baseUrl);
+  const res = await axios.get(`${endpoint}/`);
+  if (res.status === 200 && res.data?.version) return true;
+  throw new Error('Ollama not reachable');
+}
+
+// Ollama: Fetch models/tags
+async function fetchOllamaModels(baseUrl: string) {
+  const endpoint = normalizeOllamaBaseUrl(baseUrl);
+  const { data } = await axios.get(`${endpoint}/api/tags`);
+  return data.models.map(model => ({
+    label: model.name,
+    value: model.name,
+  }));
+}
+
+async function ollamaEmbeddings(baseUrl: string, body: any) {
+  const endpoint = normalizeOllamaBaseUrl(baseUrl);
+  const url = `${endpoint}/api/embeddings`;
+  const res = await axios.post(url, body);
+  return res.data;
+}
 
 export const aiRouter = router({
   embeddingUpsert: authProcedure
@@ -233,43 +263,34 @@ export const aiRouter = router({
     }),
 
   testConnect: authProcedure
-    .mutation(async () => {
-      try {
-        const agent = await AiModelFactory.TestConnectAgent();
-        const result = await agent.generate([
-          { role: 'user', content: 'test' }
-        ]);
-        console.log(result.text)
-        return { success: !!result };
-      } catch (error) {
-        console.error("Connection test failed:", error);
-        throw new Error(`Connection test failed: ${error?.message || "Unknown error"}`);
+    .input(z.object({
+      aiApiEndpoint: z.string(),
+      provider: z.string(),
+    }))
+    .mutation(async ({ input }) => {
+      if (input.provider === 'Ollama') {
+        await testOllamaConnection(input.aiApiEndpoint);
+        return { success: true };
       }
+      // ...other providers...
     }),
 
   fetchModels: authProcedure
     .input(z.object({
       provider: z.string(),
       aiApiEndpoint: z.string(),
-      aiApiKey: z.string(),
-      embeddingApiEndpoint: z.string(),
-      embeddingApiKey: z.string(),
-      rerankUseEembbingEndpoint: z.boolean(),
+      aiApiKey: z.string().optional(),
+      embeddingApiEndpoint: z.string().optional(),
+      embeddingApiKey: z.string().optional(),
+      rerankUseEembbingEndpoint: z.boolean().optional(),
     }))
     .query(async ({ input }) => {
-      const axios = require('axios');
       let aiModels = [];
       let embeddingModels = [];
       let rerankModels = [];
 
-      // Example: handle Ollama
       if (input.provider === 'Ollama') {
-        const endpoint = input.aiApiEndpoint || 'http://127.0.0.1:11434/api';
-        const { data } = await axios.get(`${endpoint}/tags`);
-        aiModels = data.models.map(model => ({
-          label: model.name,
-          value: model.name,
-        }));
+        aiModels = await fetchOllamaModels(input.aiApiEndpoint);
         embeddingModels = aiModels;
         rerankModels = aiModels;
       } else {
@@ -284,19 +305,19 @@ export const aiRouter = router({
         }));
         embeddingModels = aiModels;
         rerankModels = aiModels;
-      }
 
-      // If embedding endpoint is set, fetch embedding models
-      if (input.embeddingApiEndpoint) {
-        const { data } = await axios.get(`${input.embeddingApiEndpoint}/models`, {
-          headers: { 'Authorization': `Bearer ${input.embeddingApiKey}` }
-        });
-        embeddingModels = data.data.map(model => ({
-          label: model.id,
-          value: model.id,
-        }));
-        if (input.rerankUseEembbingEndpoint) {
-          rerankModels = embeddingModels;
+        // If embedding endpoint is set, fetch embedding models (for OpenAI-like APIs)
+        if (input.embeddingApiEndpoint) {
+          const { data } = await axios.get(`${input.embeddingApiEndpoint}/models`, {
+            headers: { 'Authorization': `Bearer ${input.embeddingApiKey}` }
+          });
+          embeddingModels = data.data.map(model => ({
+            label: model.id,
+            value: model.id,
+          }));
+          if (input.rerankUseEembbingEndpoint) {
+            rerankModels = embeddingModels;
+          }
         }
       }
 
