@@ -101,7 +101,7 @@ export const AiSetting = observer(() => {
     rerankModelSelect: new StorageListState({ key: 'rerankModelSelect' }),
     async fetchModels() {
       try {
-        // Call backend API to fetch models, passing endpoint/key if needed
+        RootStore.Get(ToastPlugin).info(t('fetching-model-list')); // Inform user fetching starts
         const provider = blinko.config.value?.aiModelProvider!;
         const aiApiEndpoint = blinko.config.value?.aiApiEndpoint!;
         const aiApiKey = blinko.config.value?.aiApiKey!;
@@ -109,7 +109,6 @@ export const AiSetting = observer(() => {
         const embeddingApiKey = blinko.config.value?.embeddingApiKey!;
         const rerankUseEembbingEndpoint = this.rerankUseEembbingEndpoint;
 
-        // Backend should handle all logic and return model lists
         const { aiModels, embeddingModels, rerankModels } = await api.ai.fetchModels.query({
           provider,
           aiApiEndpoint,
@@ -123,16 +122,36 @@ export const AiSetting = observer(() => {
         this.embeddingModelSelect.save(embeddingModels);
         this.rerankModelSelect.save(rerankModels);
 
-        RootStore.Get(ToastPlugin).success(
-          t('Model list updated successfully')
-        );
+        RootStore.Get(ToastPlugin).success(t('model-list-fetch-success')); // Success message
       } catch (error: any) {
         const message =
           error?.data?.message ||
           error?.message ||
-          t('Failed to update model list');
+          t('model-list-fetch-failed');
         RootStore.Get(ToastPlugin).error(
-          `${t('Error updating model list')}: ${message}`
+          `${t('model-list-fetch-failed')}: ${message}`
+        );
+      }
+    },
+    async testConnection() {
+      try {
+        RootStore.Get(ToastPlugin).info(t('testing-connection')); // Inform user test starts
+        await api.ai.testConnect.mutate();
+        RootStore.Get(ToastPlugin).success(t('connection-success')); // Success message
+      } catch (error: any) {
+        RootStore.Get(ToastPlugin).error(
+          `${t('connection-failed')}: ${error?.data?.message || error?.message || t('unknown-error')}`
+        );
+      }
+    },
+    async saveSettings() {
+      try {
+        RootStore.Get(ToastPlugin).info(t('saving-settings')); // Inform user save starts
+        // ...save logic...
+        RootStore.Get(ToastPlugin).success(t('settings-saved-success')); // Success message
+      } catch (error: any) {
+        RootStore.Get(ToastPlugin).error(
+          `${t('settings-save-failed')}: ${error?.data?.message || error?.message || t('unknown-error')}`
         );
       }
     }
