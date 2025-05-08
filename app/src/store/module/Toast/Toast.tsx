@@ -131,11 +131,15 @@ export class ToastPlugin implements Store {
   }
 
   success(str: string) {
-    toast.success(str, { icon: '👏' })
-  };
+    // Capitalize first letter and remove hyphens
+    const formatted = str.replace(/-/g, ' ').replace(/^\w/, c => c.toUpperCase());
+    toast.success(formatted, { icon: '👏' });
+  }
   error(str: string) {
-    toast.error(this.splitTextIntoLines(str, 60))
-  };
+    // Capitalize first letter and remove hyphens
+    const formatted = this.splitTextIntoLines(str.replace(/-/g, ' ').replace(/^\w/, c => c.toUpperCase()), 60);
+    toast.error(formatted, { icon: '❌' });
+  }
   loading = toast.loading;
   custom = toast.custom;
   dismiss = toast.dismiss;

@@ -101,59 +101,39 @@ export const AiSetting = observer(() => {
     rerankModelSelect: new StorageListState({ key: 'rerankModelSelect' }),
     async fetchModels() {
       try {
+        // Call backend API to fetch models, passing endpoint/key if needed
         const provider = blinko.config.value?.aiModelProvider!;
-        let modelList: any = [];
-        const endpoint = new URL(blinko.config.value?.aiApiEndpoint!);
-        if (provider === 'Ollama') {
-          console.log(blinko.config.value?.aiApiEndpoint);
-          let { data } = await axios.get(`${!!endpoint ? `${endpoint.origin}/api` : 'http://127.0.0.1:11434/api'}/tags`);
-          modelList = data.models.map(model => ({
-            label: model.name,
-            value: model.name
-          }));
-          this.aiModelSelect.save(modelList);
-          this.embeddingModelSelect.save(modelList);
-          this.rerankModelSelect.save(modelList);
-        } else {
-          try {
-            let { data } = await axios.get(`${!!endpoint ? endpoint.href : 'https://api.openai.com'}/models`, {
-              headers: {
-                'Authorization': `Bearer ${blinko.config.value?.aiApiKey}`
-              }
-            });
-            modelList = data.data.map(model => ({
-              label: model.id,
-              value: model.id
-            }));
-            this.aiModelSelect.save(modelList);
-            this.embeddingModelSelect.save(modelList);
-            this.rerankModelSelect.save(modelList);
-          } catch (error) {
-            RootStore.Get(ToastPlugin).error(error.message || 'ERROR');
-          }
-        }
-        if (blinko.config.value?.embeddingApiEndpoint) {
-          const embeddingEndpoint = new URL(blinko.config.value?.embeddingApiEndpoint);
-          let { data } = await axios.get(`${!!embeddingEndpoint ? embeddingEndpoint.href : 'https://api.openai.com'}/models`, {
-            headers: {
-              'Authorization': `Bearer ${blinko.config.value?.embeddingApiKey}`
-            }
-          });
-          this.embeddingModelSelect.save(data.data.map(model => ({
-            label: model.id,
-            value: model.id
-          })));
-          if (this.rerankUseEembbingEndpoint) {
-            this.rerankModelSelect.save(data.data.map(model => ({
-              label: model.id,
-              value: model.id
-            })));
-          }
-        }
-        RootStore.Get(ToastPlugin).success(t('model-list-updated'));
-      } catch (error) {
-        console.log(error);
-        RootStore.Get(ToastPlugin).error(error.message || 'ERROR');
+        const aiApiEndpoint = blinko.config.value?.aiApiEndpoint!;
+        const aiApiKey = blinko.config.value?.aiApiKey!;
+        const embeddingApiEndpoint = blinko.config.value?.embeddingApiEndpoint!;
+        const embeddingApiKey = blinko.config.value?.embeddingApiKey!;
+        const rerankUseEembbingEndpoint = this.rerankUseEembbingEndpoint;
+
+        // Backend should handle all logic and return model lists
+        const { aiModels, embeddingModels, rerankModels } = await api.ai.fetchModels.query({
+          provider,
+          aiApiEndpoint,
+          aiApiKey,
+          embeddingApiEndpoint,
+          embeddingApiKey,
+          rerankUseEembbingEndpoint,
+        });
+
+        this.aiModelSelect.save(aiModels);
+        this.embeddingModelSelect.save(embeddingModels);
+        this.rerankModelSelect.save(rerankModels);
+
+        RootStore.Get(ToastPlugin).success(
+          t('Model list updated successfully')
+        );
+      } catch (error: any) {
+        const message =
+          error?.data?.message ||
+          error?.message ||
+          t('Failed to update model list');
+        RootStore.Get(ToastPlugin).error(
+          `${t('Error updating model list')}: ${message}`
+        );
       }
     }
   }));

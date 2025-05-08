@@ -246,4 +246,60 @@ export const aiRouter = router({
         throw new Error(`Connection test failed: ${error?.message || "Unknown error"}`);
       }
     }),
+
+  fetchModels: authProcedure
+    .input(z.object({
+      provider: z.string(),
+      aiApiEndpoint: z.string(),
+      aiApiKey: z.string(),
+      embeddingApiEndpoint: z.string(),
+      embeddingApiKey: z.string(),
+      rerankUseEembbingEndpoint: z.boolean(),
+    }))
+    .query(async ({ input }) => {
+      const axios = require('axios');
+      let aiModels = [];
+      let embeddingModels = [];
+      let rerankModels = [];
+
+      // Example: handle Ollama
+      if (input.provider === 'Ollama') {
+        const endpoint = input.aiApiEndpoint || 'http://127.0.0.1:11434/api';
+        const { data } = await axios.get(`${endpoint}/tags`);
+        aiModels = data.models.map(model => ({
+          label: model.name,
+          value: model.name,
+        }));
+        embeddingModels = aiModels;
+        rerankModels = aiModels;
+      } else {
+        // Example: OpenAI or others
+        const endpoint = input.aiApiEndpoint || 'https://api.openai.com';
+        const { data } = await axios.get(`${endpoint}/models`, {
+          headers: { 'Authorization': `Bearer ${input.aiApiKey}` }
+        });
+        aiModels = data.data.map(model => ({
+          label: model.id,
+          value: model.id,
+        }));
+        embeddingModels = aiModels;
+        rerankModels = aiModels;
+      }
+
+      // If embedding endpoint is set, fetch embedding models
+      if (input.embeddingApiEndpoint) {
+        const { data } = await axios.get(`${input.embeddingApiEndpoint}/models`, {
+          headers: { 'Authorization': `Bearer ${input.embeddingApiKey}` }
+        });
+        embeddingModels = data.data.map(model => ({
+          label: model.id,
+          value: model.id,
+        }));
+        if (input.rerankUseEembbingEndpoint) {
+          rerankModels = embeddingModels;
+        }
+      }
+
+      return { aiModels, embeddingModels, rerankModels };
+    }),
 })
